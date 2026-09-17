@@ -1,0 +1,237 @@
+/* color and spacing tokens */
+:root {
+    --bg_color: #0d0f14;
+    --card_bg: #171a21;
+    --border_color: #262b35;
+    --input_bg: #1e222b;
+    --text_primary: #e8eaed;
+    --text_secondary: #8a92a3;
+    --accent_color: #6c8eef;
+    --accent_hover: #5578e0;
+    --error_color: #ef5350;
+    --success_color: #4caf50;
+    --radius_sm: 8px;
+    --radius_md: 14px;
+}
+
+/* reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "Inter", system-ui, sans-serif;
+    background-color: var(--bg_color);
+    color: var(--text_primary);
+}
+
+/* page wrapper, centers the card on all screen sizes */
+.login_page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+/* the card itself */
+.login_card {
+    width: 100%;
+    max-width: 380px;
+    background-color: var(--card_bg);
+    border: 1px solid var(--border_color);
+    border-radius: var(--radius_md);
+    padding: 40px 32px;
+}
+
+.login_header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login_title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.login_subtitle {
+    margin-top: 6px;
+    font-size: 0.9rem;
+    color: var(--text_secondary);
+}
+
+.login_form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form_group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form_label {
+    font-size: 0.8rem;
+    color: var(--text_secondary);
+}
+
+.input_wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input_icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text_secondary);
+    font-size: 0.95rem;
+    pointer-events: none;
+}
+
+.form_input {
+    width: 100%;
+    background-color: var(--input_bg);
+    border: 1px solid var(--border_color);
+    border-radius: var(--radius_sm);
+    color: var(--text_primary);
+    font-size: 0.95rem;
+    padding: 12px 14px 12px 40px;
+    transition: border-color 0.15s ease;
+}
+
+.form_input::placeholder {
+    color: var(--text_secondary);
+    opacity: 0.7;
+}
+
+.form_input:focus {
+    outline: none;
+    border-color: var(--accent_color);
+}
+
+.has_toggle {
+    padding-right: 40px;
+}
+
+.password_toggle {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text_secondary);
+    font-size: 1rem;
+    padding: 6px;
+    cursor: pointer;
+    display: flex;
+}
+
+.password_toggle:hover {
+    color: var(--text_primary);
+}
+
+.form_options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.remember_me {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text_secondary);
+    cursor: pointer;
+}
+
+.remember_me input {
+    accent-color: var(--accent_color);
+}
+
+.forgot_link, .signup_link {
+    color: var(--accent_color);
+    text-decoration: none;
+}
+
+.forgot_link:hover, .signup_link:hover {
+    text-decoration: underline;
+}
+
+.error_message {
+    font-size: 0.82rem;
+    color: var(--error_color);
+    min-height: 1em;
+    display: none;
+}
+
+.error_message.is_visible {
+    display: block;
+}
+
+.success_message {
+    font-size: 0.82rem;
+    color: var(--success_color);
+    min-height: 1em;
+    display: none;
+}
+
+.success_message.is_visible {
+    display: block;
+}
+
+.login_button {
+    background-color: var(--accent_color);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius_sm);
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.login_button:hover {
+    background-color: var(--accent_hover);
+}
+
+.form_footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text_secondary);
+}
+
+/* small phones */
+@media (max-width: 360px) {
+    .login_card {
+        padding: 32px 22px;
+    }
+}
+
+/* landscape phones, short viewport height, keep the card compact so it always fits */
+@media (max-height: 500px) and (orientation: landscape) {
+    .login_page {
+        align-items: flex-start;
+        padding: 16px;
+    }
+
+    .login_card {
+        padding: 20px 28px;
+    }
+
+    .login_header {
+        margin-bottom: 16px;
+    }
+
+    .login_form {
+        gap: 12px;
+    }
+}

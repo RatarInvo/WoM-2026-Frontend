@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <!-- bootstrap icons + google font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- file links -->
+    <link rel="stylesheet" href="css/login.css">
+    <script src="js/login.js" defer></script>
+</head>
+<body>
+    <main class="login_page">
+        <section class="login_card">
+            <!-- header -->
+            <header class="login_header">
+                <h1 class="login_title">Welcome back</h1>
+                <p class="login_subtitle">Sign in to continue</p>
+            </header>
+
+            <form class="login_form" id="login_form" novalidate>
+                <!-- username field -->
+                <div class="form_group">
+                    <label class="form_label" for="username">Username</label>
+                    <div class="input_wrapper">
+                        <i class="bi bi-person input_icon"></i>
+                        <input
+                            class="form_input"
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Enter your username"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- password field -->
+                <div class="form_group">
+                    <label class="form_label" for="password">Password</label>
+                    <div class="input_wrapper">
+                        <i class="bi bi-lock input_icon"></i>
+                        <input
+                            class="form_input has_toggle"
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required
+                        >
+                        <button type="button" class="password_toggle" id="password_toggle" aria-label="Show password">
+                            <i class="bi bi-eye" id="toggle_icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- extra options -->
+                <div class="form_options">
+                    <label class="remember_me">
+                        <input type="checkbox" id="remember_me">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="forgot.html" class="forgot_link">Forgot password?</a>
+                </div>
+
+                <!-- error message, hidden by default -->
+                <p class="error_message" id="error_message"></p>
+
+                <button type="submit" class="login_button">Sign in</button>
+            </form>
+
+            <p class="form_footer">Don't have an account? <a href="register.html" class="signup_link">Sign up</a></p>
+        </section>
+    </main>
+</body>
+</html>

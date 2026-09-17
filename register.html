@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <!-- bootstrap icons + google font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- file links -->
+    <link rel="stylesheet" href="css/login.css">
+    <script src="js/register.js" defer></script>
+</head>
+<body>
+    <main class="login_page">
+        <section class="login_card">
+            <!-- header -->
+            <header class="login_header">
+                <h1 class="login_title">Create account</h1>
+                <p class="login_subtitle">Sign up to get started</p>
+            </header>
+
+            <form class="login_form" id="register_form" novalidate>
+                <!-- username field -->
+                <div class="form_group">
+                    <label class="form_label" for="username">Username</label>
+                    <div class="input_wrapper">
+                        <i class="bi bi-person input_icon"></i>
+                        <input
+                            class="form_input"
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Choose a username"
+                            autocomplete="username"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- email field -->
+                <div class="form_group">
+                    <label class="form_label" for="email">Email</label>
+                    <div class="input_wrapper">
+                        <i class="bi bi-envelope input_icon"></i>
+                        <input
+                            class="form_input"
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <!-- password field -->
+                <div class="form_group">
+                    <label class="form_label" for="password">Password</label>
+                    <div class="input_wrapper">
+                        <i class="bi bi-lock input_icon"></i>
+                        <input
+                            class="form_input has_toggle"
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" class="password_toggle" id="password_toggle" aria-label="Show password">
+                            <i class="bi bi-eye" id="password_toggle_icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- confirm password field -->
+                <div class="form_group">
+                    <label class="form_label" for="confirm_password">Confirm password</label>
+                    <div class="input_wrapper">
+                        <i class="bi bi-lock input_icon"></i>
+                        <input
+                            class="form_input has_toggle"
+                            type="password"
+                            id="confirm_password"
+                            name="confirm_password"
+                            placeholder="Repeat your password"
+                            autocomplete="new-password"
+                            required
+                        >
+                        <button type="button" class="password_toggle" id="confirm_password_toggle" aria-label="Show password">
+                            <i class="bi bi-eye" id="confirm_password_toggle_icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- feedback messages, hidden by default -->
+                <p class="error_message" id="error_message"></p>
+                <p class="success_message" id="success_message"></p>
+
+                <button type="submit" class="login_button">Sign up</button>
+            </form>
+
+            <p class="form_footer">Already have an account? <a href="login.html" class="signup_link">Sign in</a></p>
+        </section>
+    </main>
+</body>
+</html>
