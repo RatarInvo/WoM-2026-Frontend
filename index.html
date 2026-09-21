@@ -3,17 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sticky Notes App</title>
+    <title>Notes</title>
+    <link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
+    <!-- bootstrap icons + google font -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <!-- file links -->
+    <link rel="stylesheet" href="css/theme.css">
     <link rel="stylesheet" href="css/index.css">
+    <script src="js/theme.js"></script>
     <script src="js/index.js" defer></script>
 </head>
 <body>
-    <header>
-        <h1>Sticky Notes</h1>
-        <button id="add-note">Add Note</button>
+    <header class="board_header">
+        <div class="board_left">
+            <a href="index.html"><img src="img/favicon.png" alt="Notes logo" class="board_logo"></a>
+
+            <div class="board_selector">
+                <label for="board_select" class="board_label">Board:</label>
+                <select id="board_select" class="board_select"></select>
+            </div>
+        </div>
+
+        <div class="board_actions">
+            <button type="button" id="theme_toggle" class="theme_toggle" aria-label="Switch to light mode">
+                <i class="bi bi-sun"></i>
+            </button>
+
+            <button type="button" id="new_note_button" class="primary_button">
+                <i class="bi bi-plus-lg"></i>
+                New Note
+            </button>
+        </div>
     </header>
-    <main id="notes-container">
-        <!-- Sticky notes will be dynamically added here -->
-    </main>
+
+    <main id="notes_board" class="notes_board"></main>
+
+    <template id="note_template">
+        <div class="note">
+            <div class="note_header">
+                <div class="note_colors">
+                <button type="button" class="note_color_swatch" data-color="0" title="Change note color"></button>
+                <button type="button" class="note_color_swatch" data-color="1" title="Change note color"></button>
+                <button type="button" class="note_color_swatch" data-color="2" title="Change note color"></button>
+                <button type="button" class="note_color_swatch" data-color="3" title="Change note color"></button>
+                <button type="button" class="note_color_swatch" data-color="4" title="Change note color"></button>
+            </div>
+                <button type="button" class="note_delete" aria-label="Delete note"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="note_content" contenteditable="true" data-placeholder="Click to add details..."></div>
+            <svg class="note_resize" viewBox="0 0 16 16" aria-hidden="true">
+                <line x1="13.5" y1="10.5" x2="10.5" y2="13.5"></line>
+                <line x1="13.5" y1="7" x2="7" y2="13.5"></line>
+                <line x1="13.5" y1="3.5" x2="3.5" y2="13.5"></line>
+            </svg>
+        </div>
+    </template>
 </body>
 </html>

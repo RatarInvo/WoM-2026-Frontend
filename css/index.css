@@ -1,6 +1,283 @@
-/* reset */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    font-family: "Inter", system-ui, sans-serif;
+    background-color: var(--bg_color);
+    color: var(--text_primary);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+}
+
+.board_header {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 24px;
+    background-color: var(--card_bg);
+    border-bottom: 1px solid var(--border_color);
+}
+
+.board_left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.board_logo {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+}
+
+.board_selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.board_actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.board_label {
+    font-size: 0.9rem;
+    color: var(--text_secondary);
+}
+
+.board_select {
+    background-color: var(--input_bg);
+    color: var(--text_primary);
+    border: 1px solid var(--border_color);
+    border-radius: var(--radius_sm);
+    padding: 8px 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.board_select:focus {
+    outline: none;
+    border-color: var(--accent_color);
+}
+
+.primary_button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--accent_color);
+    color: #ffffff;
+    border: none;
+    border-radius: var(--radius_sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.primary_button:hover {
+    background-color: var(--accent_hover);
+}
+
+.notes_board {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    overflow: auto;
+    background-image: radial-gradient(var(--border_color) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+:root {
+    --note_fill_0: #fdf1a8;
+    --note_edge_0: #b6ae79;
+    --note_fill_1: #f9c9e3;
+    --note_edge_1: #b391a3;
+    --note_fill_2: #c3f0d8;
+    --note_edge_2: #8cad9c;
+    --note_fill_3: #c7dcfb;
+    --note_edge_3: #8f9eb5;
+    --note_fill_4: #ddd0fb;
+    --note_edge_4: #9f96b5;
+}
+
+.note[data-color="0"] { --note_fill: var(--note_fill_0); --note_edge: var(--note_edge_0); }
+.note[data-color="1"] { --note_fill: var(--note_fill_1); --note_edge: var(--note_edge_1); }
+.note[data-color="2"] { --note_fill: var(--note_fill_2); --note_edge: var(--note_edge_2); }
+.note[data-color="3"] { --note_fill: var(--note_fill_3); --note_edge: var(--note_edge_3); }
+.note[data-color="4"] { --note_fill: var(--note_fill_4); --note_edge: var(--note_edge_4); }
+
+.note {
+    --note_ink: #24262b;
+    position: absolute;
+    background-color: var(--note_fill);
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    height: 160px;
+    color: var(--note_ink);
+    border: 1px solid var(--note_edge);
+    border-radius: 4px;
+    box-shadow: var(--shadow_note);
+    padding: 0;
+    overflow: hidden;
+    user-select: none;
+    min-width: 180px;
+    min-height: 110px;
+}
+
+.note_resize {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    touch-action: none;
+    stroke: var(--note_ink);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    opacity: 0.25;
+    transition: opacity 0.15s ease;
+}
+
+.note:hover .note_resize {
+    opacity: 0.5;
+}
+
+.note.is_resizing .note_resize {
+    opacity: 0.8;
+}
+
+.note.is_resizing, .note.is_resizing .note_content {
+    cursor: nwse-resize;
+}
+
+.note.is_dragging, .note.is_dragging .note_content {
+    cursor: grabbing;
+}
+
+.note_header {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--note_edge);
+    cursor: grab;
+    touch-action: none;
+}
+
+.note_header:active {
+    cursor: grabbing;
+}
+
+.note_colors {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.note_color_swatch {
+    display: block;
+    flex: none;
+    width: 13px;
+    height: 13px;
+    padding: 0;
+    border: 1px solid var(--note_edge);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+
+.note_color_swatch[data-color="0"] { background-color: var(--note_fill_0); }
+.note_color_swatch[data-color="1"] { background-color: var(--note_fill_1); }
+.note_color_swatch[data-color="2"] { background-color: var(--note_fill_2); }
+.note_color_swatch[data-color="3"] { background-color: var(--note_fill_3); }
+.note_color_swatch[data-color="4"] { background-color: var(--note_fill_4); }
+
+.note_color_swatch:hover {
+    transform: scale(1.18);
+}
+
+.note_color_swatch[aria-pressed="true"] {
+    box-shadow: 0 0 0 1px var(--note_ink);
+}
+
+.note_color_swatch:focus-visible, .note_delete:focus-visible {
+    outline: 2px solid var(--note_ink);
+    outline-offset: 1px;
+}
+
+.note_delete {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    margin-left: 3px;
+    border: none;
+    background: none;
+    color: var(--note_ink);
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 0;
+    opacity: 0.75;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.note_delete:hover {
+    color: #dc2626;
+    opacity: 1;
+}
+
+.note_content {
+    flex: 1;
+    cursor: text;
+    padding: 10px 12px 18px;
+    min-height: 0;
+    overflow-y: auto;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    outline: none;
+    user-select: text;
+    white-space: pre-wrap;
+}
+
+.note_content:empty::before {
+    content: attr(data-placeholder);
+    opacity: 0.45;
+}
+
+@media (max-width: 560px) {
+    .board_header {
+        padding: 14px 16px;
+    }
+
+    .note {
+        width: 180px;
+    }
 }
