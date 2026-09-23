@@ -1,3 +1,10 @@
+const token = get_token();
+
+if (token) {
+    window.location.href = "index.html";
+}
+
+
 // grab the elements we need
 const login_form = document.getElementById("login_form");
 const username_input = document.getElementById("username");

@@ -58,28 +58,28 @@ async function get_notes() {
     });
 }
 
-async function create_note(note, board_id) {
+async function api_create_note(note, board_id) {
     return api_request(`${NOTES_API_URL}/notes`, {
         method: "POST",
         headers: get_auth_headers(),
         body: JSON.stringify({
-            note: note,
-            board_id: board_id
+            note,
+            board_id
         })
     });
 }
 
-async function update_note(id, note) {
+async function api_update_note(id, note) {
     return api_request(`${NOTES_API_URL}/notes/${id}`, {
         method: "PUT",
         headers: get_auth_headers(),
         body: JSON.stringify({
-            note: note
+            note
         })
     });
 }
 
-async function delete_note(id) {
+async function api_delete_note(id) {
     return api_request(`${NOTES_API_URL}/notes/${id}`, {
         method: "DELETE",
         headers: get_auth_headers()

@@ -4,6 +4,8 @@
 
 // TODO: Save note position on Database
 
+
+// Check if the user is logged in
 const token = get_token();
 
 if (!token) {
@@ -21,25 +23,81 @@ const note_color_count = note_template.content.querySelectorAll(".note_color_swa
 
 const note_size = { width: 220, height: 160, min_width: 180, min_height: 110 };
 
-const boards = [{ id: "board_1", name: "Projektplanering", notes: [] }];
-let active_board = boards[0];
+let boards = [];
+let active_board = null;
 
 let z_index_counter = 10;
 
 const unique_id = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 const find_note = (note_element) => active_board.notes.find((note) => note.id === note_element.dataset.id);
 
+// Find a note by its ID
+function convert_api_note(api_note, board_note_index) {
+    const cascade = (board_note_index % 6) * 24;
+
+    return {
+        id: String(api_note.id),
+        content: api_note.note ?? "",
+        color: 0,
+        x: 40 + cascade,
+        y: 40 + cascade,
+        width: note_size.width,
+        height: note_size.height,
+        board_id: api_note.board_id ?? api_note.board?.id,
+    };
+}
+
+async function load_boards_and_notes() {
+    const api_notes = await get_notes();
+
+    const boards_by_id = new Map();
+
+    api_notes.forEach((api_note) => {
+        const board = api_note.board;
+
+        if (!board) {
+            return;
+        }
+
+        if (!boards_by_id.has(board.id)) {
+            boards_by_id.set(board.id, {
+                id: String(board.id),
+                name: board.name,
+                notes: [],
+            });
+        }
+
+        const frontend_board = boards_by_id.get(board.id);
+
+        frontend_board.notes.push(
+            convert_api_note(api_note, frontend_board.notes.length)
+        );
+    });
+
+    boards = [...boards_by_id.values()];
+    active_board = boards[0] ?? null;
+}
+
 function render_board_select() {
     board_select.replaceChildren(
-        ...boards.map((board) => new Option(board.name, board.id)),
-        new Option("+ New board", "__new__"),
+        ...boards.map((board) => new Option(board.name, board.id))
     );
 
-    board_select.value = active_board.id;
+    if (active_board) {
+        board_select.value = active_board.id;
+    }
 }
 
 function render_notes() {
-    notes_board.replaceChildren(...active_board.notes.map((note) => create_note_element(note)));
+    notes_board.replaceChildren();
+
+    if (!active_board) {
+        return;
+    }
+
+    notes_board.replaceChildren(
+        ...active_board.notes.map((note) => create_note_element(note))
+    );
 }
 
 function create_note_element(note) {
@@ -106,29 +164,45 @@ function start_gesture(event, note_element, gesture) {
     note_element.addEventListener("pointercancel", end, options);
 }
 
-function create_note() {
-    const cascade = (active_board.notes.length % 6) * 24;
+async function create_note() {
+    if (!active_board) {
+        return;
+    }
 
-    const note = {
-        id: unique_id("note"),
-        content: "",
-        color: Math.floor(Math.random() * note_color_count),
-        x: 40 + cascade,
-        y: 40 + cascade,
-        width: note_size.width,
-        height: note_size.height,
-    };
+    const note_text = window.prompt("Note text:")?.trim();
 
-    active_board.notes.push(note);
-    notes_board.appendChild(create_note_element(note));
+    if (!note_text) {
+        return;
+    }
+
+    try {
+        await api_create_note(note_text, Number(active_board.id));
+
+        await load_boards_and_notes();
+        render_board_select();
+        render_notes();
+    } catch (error) {
+        console.error(error);
+        window.alert(error.message);
+    }
 }
 
-function delete_note(note_element) {
-    const index = active_board.notes.findIndex((note) => note.id === note_element.dataset.id);
+async function delete_note(note_element) {
+    const note = find_note(note_element);
 
-    if (index !== -1) {
-        active_board.notes.splice(index, 1);
-        note_element.remove();
+    if (!note) {
+        return;
+    }
+
+    try {
+        await api_delete_note(note.id);
+
+        await load_boards_and_notes();
+        render_board_select();
+        render_notes();
+    } catch (error) {
+        console.error(error);
+        window.alert(error.message);
     }
 }
 
@@ -164,34 +238,53 @@ notes_board.addEventListener("pointerdown", (event) => {
     }
 });
 
-notes_board.addEventListener("focusout", (event) => {
-    if (event.target.classList.contains("note_content")) {
-        find_note(event.target.closest(".note")).content = event.target.textContent;
+notes_board.addEventListener("focusout", async (event) => {
+    if (!event.target.classList.contains("note_content")) {
+        return;
+    }
+
+    const note_element = event.target.closest(".note");
+    const note = find_note(note_element);
+
+    if (!note) {
+        return;
+    }
+
+    const new_content = event.target.textContent.trim();
+
+    try {
+        await api_update_note(note.id, new_content);
+        note.content = new_content;
+    } catch (error) {
+        console.error(error);
+        window.alert(error.message);
     }
 });
 
 board_select.addEventListener("change", () => {
-    if (board_select.value !== "__new__") {
-        active_board = boards.find((board) => board.id === board_select.value);
-        render_notes();
+    const selected_board = boards.find(
+        (board) => board.id === board_select.value
+    );
+
+    if (!selected_board) {
         return;
     }
 
-    const name = window.prompt("Name your new board:")?.trim();
-
-    if (!name) {
-        board_select.value = active_board.id;
-        return;
-    }
-
-    active_board = { id: unique_id("board"), name, notes: [] };
-
-    boards.push(active_board);
-    render_board_select();
+    active_board = selected_board;
     render_notes();
 });
 
 new_note_button.addEventListener("click", () => create_note());
 
-render_board_select();
-render_notes();
+async function initialize_page() {
+    try {
+        await load_boards_and_notes();
+        render_board_select();
+        render_notes();
+    } catch (error) {
+        console.error(error);
+        notes_board.textContent = "Could not load notes.";
+    }
+}
+
+initialize_page();
