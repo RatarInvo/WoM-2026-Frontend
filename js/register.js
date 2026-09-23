@@ -27,7 +27,7 @@ function setup_password_toggle(toggle_id, icon_id, input_element) {
 setup_password_toggle("password_toggle", "password_toggle_icon", password_input);
 setup_password_toggle("confirm_password_toggle", "confirm_password_toggle_icon", confirm_password_input);
 
-register_form.addEventListener("submit", function (event) {
+register_form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const username_value = username_input.value.trim();
@@ -51,10 +51,19 @@ register_form.addEventListener("submit", function (event) {
     }
 
     hide_error();
-    show_success("Account created. You can now sign in.");
 
     // form is valid, hand it off to backend
-    console.log("register submitted:", { username: username_value, email: email_value });
+    try {
+    await register_user(username_value, password_value, email_value);
+
+    show_success("Account created. You can now sign in.");
+
+    setTimeout(() => {
+        window.location.href = "login.html";
+    }, 1000);
+    } catch (error) {
+        show_error(error.message);
+    }
 });
 
 function show_error(text) {

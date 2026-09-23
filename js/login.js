@@ -17,7 +17,7 @@ password_toggle.addEventListener("click", function () {
 });
 
 // basic check before the form is sent anywhere
-login_form.addEventListener("submit", function (event) {
+login_form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const username_value = username_input.value.trim();
@@ -30,8 +30,16 @@ login_form.addEventListener("submit", function (event) {
 
     hide_error();
 
-    // form is valid, hand it off to backend
-    console.log("login submitted:", { username: username_value });
+    try {
+        const result = await login_user(username_value, password_value);
+
+        localStorage.setItem("auth_token", result.token);
+        localStorage.setItem("user_id", result.id);
+
+        window.location.href = "index.html";
+    } catch (error) {
+        show_error("Wrong username or password. Please try again.");
+    }
 });
 
 function show_error(text) {
