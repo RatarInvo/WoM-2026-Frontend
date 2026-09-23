@@ -4,6 +4,13 @@
 
 // TODO: Save note position on Database
 
+const token = get_token();
+
+if (!token) {
+    window.location.href = "login.html";
+}
+
+
 // grab the elements we need
 const notes_board = document.getElementById("notes_board");
 const board_select = document.getElementById("board_select");
