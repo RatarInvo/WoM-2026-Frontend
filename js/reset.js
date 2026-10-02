@@ -5,7 +5,16 @@ const confirm_password_input = document.getElementById("confirm_password");
 const error_message = document.getElementById("error_message");
 const success_message = document.getElementById("success_message");
 
+const submit_button = document.getElementById("submit_button");
+
 const min_password_length = 8;
+
+const reset_token = new URLSearchParams(window.location.search).get("token");
+
+if (!reset_token) {
+    show_error("This reset link is invalid. Request a new one from the forgot password page.");
+    submit_button.disabled = true;
+}
 
 // wires up one eye icon to one password field
 function setup_password_toggle(toggle_id, icon_id, input_element) {
@@ -25,7 +34,7 @@ function setup_password_toggle(toggle_id, icon_id, input_element) {
 setup_password_toggle("new_password_toggle", "new_password_toggle_icon", new_password_input);
 setup_password_toggle("confirm_password_toggle", "confirm_password_toggle_icon", confirm_password_input);
 
-reset_password_form.addEventListener("submit", function (event) {
+reset_password_form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const new_password_value = new_password_input.value.trim();
@@ -47,9 +56,19 @@ reset_password_form.addEventListener("submit", function (event) {
     }
 
     hide_error();
-    show_success("Your password has been updated.");
+    submit_button.disabled = true;
 
-    console.log("password reset submitted");
+    try {
+        await reset_password(reset_token, new_password_value);
+
+        show_success("Your password has been updated. Redirecting to sign in...");
+        setTimeout(function () {
+            window.location.href = "login.html";
+        }, 2000);
+    } catch (error) {
+        show_error(error.message);
+        submit_button.disabled = false;
+    }
 });
 
 function show_error(text) {

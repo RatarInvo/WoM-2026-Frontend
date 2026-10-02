@@ -52,6 +52,22 @@ function get_auth_headers() {
         : {};
 }
 
+async function get_boards() {
+    return api_request(`${NOTES_API_URL}/boards`, {
+        headers: get_auth_headers()
+    });
+}
+
+async function api_create_board(name) {
+    return api_request(`${NOTES_API_URL}/boards`, {
+        method: "POST",
+        headers: get_auth_headers(),
+        body: JSON.stringify({
+            name
+        })
+    });
+}
+
 async function get_notes() {
     return api_request(`${NOTES_API_URL}/notes`, {
         headers: get_auth_headers()
@@ -79,9 +95,35 @@ async function api_update_note(id, note) {
     });
 }
 
+async function api_update_note_layout(id, layout) {
+    return api_request(`${NOTES_API_URL}/notes/${id}`, {
+        method: "PUT",
+        headers: get_auth_headers(),
+        body: JSON.stringify(layout)
+    });
+}
+
 async function api_delete_note(id) {
     return api_request(`${NOTES_API_URL}/notes/${id}`, {
         method: "DELETE",
         headers: get_auth_headers()
+    });
+}
+async function request_password_reset(email) {
+    return api_request(`${LOGIN_API_URL}/password/forgot`, {
+        method: "POST",
+        body: JSON.stringify({
+            email: email
+        })
+    });
+}
+
+async function reset_password(token, password) {
+    return api_request(`${LOGIN_API_URL}/password/reset`, {
+        method: "POST",
+        body: JSON.stringify({
+            token: token,
+            password: password
+        })
     });
 }

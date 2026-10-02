@@ -5,7 +5,7 @@ const error_message = document.getElementById("error_message");
 const success_message = document.getElementById("success_message");
 const submit_button = document.getElementById("submit_button");
 
-forgot_password_form.addEventListener("submit", function (event) {
+forgot_password_form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const email_value = email_input.value.trim();
@@ -16,12 +16,15 @@ forgot_password_form.addEventListener("submit", function (event) {
     }
 
     hide_error();
-
-    // temp message
-    show_success("If an account exists for that email, a reset link is on its way.");
     submit_button.disabled = true;
 
-    console.log("password reset requested for:", email_value);
+    try {
+        const result = await request_password_reset(email_value);
+        show_success(`${result.msg} (Check the inbox at http://localhost:8025)`);
+    } catch (error) {
+        show_error(error.message);
+        submit_button.disabled = false;
+    }
 });
 
 function show_error(text) {

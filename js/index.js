@@ -2,8 +2,6 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture
 // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
 
-// TODO: Save note position on Database
-
 
 // Check if the user is logged in
 const token = get_token();
@@ -38,44 +36,40 @@ function convert_api_note(api_note, board_note_index) {
     return {
         id: String(api_note.id),
         content: api_note.note ?? "",
-        color: 0,
-        x: 40 + cascade,
-        y: 40 + cascade,
-        width: note_size.width,
-        height: note_size.height,
+        color: api_note.color ?? 0,
+        x: api_note.pos_x ?? 40 + cascade,
+        y: api_note.pos_y ?? 40 + cascade,
+        width: api_note.width ?? note_size.width,
+        height: api_note.height ?? note_size.height,
         board_id: api_note.board_id ?? api_note.board?.id,
     };
 }
 
 async function load_boards_and_notes() {
+    let api_boards = await get_boards();
+
+    if (api_boards.length === 0) {
+        api_boards = [await api_create_board("My board")];
+    }
+
     const api_notes = await get_notes();
 
-    const boards_by_id = new Map();
+    boards = api_boards.map((board) => ({
+        id: String(board.id),
+        name: board.name,
+        notes: [],
+    }));
 
     api_notes.forEach((api_note) => {
-        const board = api_note.board;
+        const board = boards.find((candidate) => candidate.id === String(api_note.board_id));
 
-        if (!board) {
-            return;
+        if (board) {
+            board.notes.push(convert_api_note(api_note, board.notes.length));
         }
-
-        if (!boards_by_id.has(board.id)) {
-            boards_by_id.set(board.id, {
-                id: String(board.id),
-                name: board.name,
-                notes: [],
-            });
-        }
-
-        const frontend_board = boards_by_id.get(board.id);
-
-        frontend_board.notes.push(
-            convert_api_note(api_note, frontend_board.notes.length)
-        );
     });
 
-    boards = [...boards_by_id.values()];
-    active_board = boards[0] ?? null;
+    const previous_board_id = active_board?.id;
+    active_board = boards.find((board) => board.id === previous_board_id) ?? boards[0] ?? null;
 }
 
 function render_board_select() {
@@ -151,6 +145,8 @@ function start_gesture(event, note_element, gesture) {
     const end = () => {
         running.abort();
         note_element.classList.remove(gesture.class_name);
+
+        save_note_layout(note, { [key_x]: note[key_x], [key_y]: note[key_y] });
     };
 
     note_element.addEventListener("pointermove", (move_event) => {
@@ -162,6 +158,14 @@ function start_gesture(event, note_element, gesture) {
 
     note_element.addEventListener("pointerup", end, options);
     note_element.addEventListener("pointercancel", end, options);
+}
+
+async function save_note_layout(note, layout) {
+    try {
+        await api_update_note_layout(note.id, layout);
+    } catch (error) {
+        console.error("Could not save note layout:", error);
+    }
 }
 
 async function create_note() {
@@ -219,8 +223,11 @@ notes_board.addEventListener("click", (event) => {
     } else if (swatch) {
         const color_index = Number(swatch.dataset.color);
 
-        find_note(note_element).color = color_index;
+        const note = find_note(note_element);
+
+        note.color = color_index;
         paint_note(note_element, color_index);
+        save_note_layout(note, { color: color_index });
     }
 });
 
