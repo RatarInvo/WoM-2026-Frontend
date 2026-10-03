@@ -2,14 +2,12 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/Element/setPointerCapture
 // https://developer.mozilla.org/en-US/docs/Web/API/Pointer_events
 
-
 // Check if the user is logged in
 const token = get_token();
 
 if (!token) {
     window.location.href = "login.html";
 }
-
 
 // grab the elements we need
 const notes_board = document.getElementById("notes_board");
@@ -26,8 +24,13 @@ let active_board = null;
 
 let z_index_counter = 10;
 
+let socket = null;
+let has_connected_before = false;
+
 const unique_id = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 const find_note = (note_element) => active_board.notes.find((note) => note.id === note_element.dataset.id);
+const find_note_by_id = (id) => active_board?.notes.find((note) => note.id === String(id));
+const find_note_element = (id) => notes_board.querySelector(`.note[data-id="${Number(id)}"]`);
 
 // Find a note by its ID
 function convert_api_note(api_note, board_note_index) {
@@ -154,6 +157,15 @@ function start_gesture(event, note_element, gesture) {
         note[key_y] = Math.max(floor_y, offset_y + move_event.clientY);
 
         place_note(note_element, note);
+
+        send_live({
+            type: "note_moving",
+            id: note.id,
+            x: note.x,
+            y: note.y,
+            width: note.width,
+            height: note.height,
+        });
     }, options);
 
     note_element.addEventListener("pointerup", end, options);
@@ -245,6 +257,18 @@ notes_board.addEventListener("pointerdown", (event) => {
     }
 });
 
+notes_board.addEventListener("input", (event) => {
+    if (!event.target.classList.contains("note_content")) {
+        return;
+    }
+
+    send_live({
+        type: "note_typing",
+        id: event.target.closest(".note").dataset.id,
+        content: event.target.textContent,
+    });
+});
+
 notes_board.addEventListener("focusout", async (event) => {
     if (!event.target.classList.contains("note_content")) {
         return;
@@ -279,15 +303,151 @@ board_select.addEventListener("change", () => {
 
     active_board = selected_board;
     render_notes();
+    join_active_board();
 });
 
 new_note_button.addEventListener("click", () => create_note());
+
+// Connect socket
+function connect_socket() {
+    socket = new WebSocket(`${NOTES_WS_URL}?token=${encodeURIComponent(get_token())}`);
+
+    socket.addEventListener("open", async () => {
+        if (has_connected_before) {
+            await load_boards_and_notes();
+            render_board_select();
+            render_notes();
+        }
+
+        has_connected_before = true;
+        join_active_board();
+    });
+
+    socket.addEventListener("message", (event) => {
+        handle_socket_message(JSON.parse(event.data));
+    });
+
+    socket.addEventListener("close", (event) => {
+        if (event.code !== 4001) {
+            setTimeout(connect_socket, 2000);
+        }
+    });
+}
+
+function send_socket_message(message) {
+    if (socket?.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(message));
+    }
+}
+
+function join_active_board() {
+    if (active_board) {
+        send_socket_message({ type: "join", board_id: active_board.id });
+    }
+}
+
+const pending_live_messages = new Map();
+let live_timer = null;
+
+function send_live(message) {
+    pending_live_messages.set(`${message.type}_${message.id}`, message);
+
+    if (live_timer) {
+        return;
+    }
+
+    live_timer = setTimeout(() => {
+        pending_live_messages.forEach(send_socket_message);
+        pending_live_messages.clear();
+        live_timer = null;
+    }, 50);
+    // send state every 50ms
+}
+
+const is_busy_moving = (note_element) => note_element.matches(".is_dragging, .is_resizing");
+const is_busy_typing = (note_element) => note_element.contains(document.activeElement);
+
+function apply_layout(note, note_element, layout) {
+    note.x = layout.x ?? note.x;
+    note.y = layout.y ?? note.y;
+    note.width = layout.width ?? note.width;
+    note.height = layout.height ?? note.height;
+
+    place_note(note_element, note);
+}
+
+function handle_socket_message(message) {
+    if (!active_board || String(message.board_id) !== active_board.id) {
+        return;
+    }
+
+    if (message.type === "note_created") {
+        if (find_note_by_id(message.note.id)) {
+            return;
+        }
+
+        const note = convert_api_note(message.note, active_board.notes.length);
+
+        active_board.notes.push(note);
+        notes_board.append(create_note_element(note));
+        return;
+    }
+
+    if (message.type === "note_deleted") {
+        active_board.notes = active_board.notes.filter((note) => note.id !== String(message.id));
+        find_note_element(message.id)?.remove();
+        return;
+    }
+
+    const note = find_note_by_id(message.type === "note_updated" ? message.note.id : message.id);
+    const note_element = note && find_note_element(note.id);
+
+    if (!note_element) {
+        return;
+    }
+
+    if (message.type === "note_moving" && !is_busy_moving(note_element)) {
+        apply_layout(note, note_element, message);
+
+        if (note_element.style.zIndex !== String(z_index_counter)) {
+            z_index_counter += 1;
+            note_element.style.zIndex = z_index_counter;
+        }
+    }
+
+    if (message.type === "note_typing" && !is_busy_typing(note_element)) {
+        note.content = message.content;
+        note_element.querySelector(".note_content").textContent = message.content;
+    }
+
+    if (message.type === "note_updated") {
+        const saved = message.note;
+
+        note.color = saved.color ?? 0;
+        paint_note(note_element, note.color);
+
+        if (!is_busy_moving(note_element)) {
+            apply_layout(note, note_element, {
+                x: saved.pos_x,
+                y: saved.pos_y,
+                width: saved.width,
+                height: saved.height,
+            });
+        }
+
+        if (!is_busy_typing(note_element)) {
+            note.content = saved.note ?? "";
+            note_element.querySelector(".note_content").textContent = note.content;
+        }
+    }
+}
 
 async function initialize_page() {
     try {
         await load_boards_and_notes();
         render_board_select();
         render_notes();
+        connect_socket();
     } catch (error) {
         console.error(error);
         notes_board.textContent = "Could not load notes.";

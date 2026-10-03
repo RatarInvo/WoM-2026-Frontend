@@ -1,5 +1,6 @@
 const LOGIN_API_URL = "http://localhost:3000";
 const NOTES_API_URL = "http://localhost:4000";
+const NOTES_WS_URL = "ws://localhost:4000";
 
 async function api_request(url, options = {}) {
     const response = await fetch(url, {
