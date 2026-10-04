@@ -45,6 +45,11 @@ function get_token() {
     return localStorage.getItem("auth_token");
 }
 
+function clear_session() {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("user_id");
+}
+
 function get_auth_headers() {
     const token = get_token();
 

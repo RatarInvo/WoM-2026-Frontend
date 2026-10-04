@@ -13,6 +13,7 @@ if (!token) {
 const notes_board = document.getElementById("notes_board");
 const board_select = document.getElementById("board_select");
 const new_note_button = document.getElementById("new_note_button");
+const logout_button = document.getElementById("logout_button");
 const note_template = document.getElementById("note_template");
 
 const note_color_count = note_template.content.querySelectorAll(".note_color_swatch").length;
@@ -308,6 +309,14 @@ board_select.addEventListener("change", () => {
 
 new_note_button.addEventListener("click", () => create_note());
 
+function log_out() {
+    socket?.close(1000);
+    clear_session();
+    window.location.href = "login.html";
+}
+
+logout_button.addEventListener("click", log_out);
+
 // Connect socket
 function connect_socket() {
     socket = new WebSocket(`${NOTES_WS_URL}?token=${encodeURIComponent(get_token())}`);
@@ -328,7 +337,9 @@ function connect_socket() {
     });
 
     socket.addEventListener("close", (event) => {
-        if (event.code !== 4001) {
+        if (event.code === 4001) {
+            log_out();
+        } else if (event.code !== 1000) {
             setTimeout(connect_socket, 2000);
         }
     });
