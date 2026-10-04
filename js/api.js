@@ -1,3 +1,10 @@
+// api test för websocket och deployment
+// const LOGIN_API_URL = "https://url.onrender.com";
+// const NOTES_API_URL = "https://url.onrender.com";
+// const NOTES_WS_URL = "wss://url.onrender.com";
+// använd wss:// i stället för ws://
+// sätt DATABASE_URL och JWT_SECRET på Render, JWT_SECRET är samma i båda tjänsterna
+
 const LOGIN_API_URL = "http://localhost:3000";
 const NOTES_API_URL = "http://localhost:4000";
 const NOTES_WS_URL = "ws://localhost:4000";
