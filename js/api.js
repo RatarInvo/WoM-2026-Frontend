@@ -4,10 +4,9 @@
 // const NOTES_WS_URL = "wss://url.onrender.com";
 // använd wss:// i stället för ws://
 // sätt DATABASE_URL och JWT_SECRET på Render, JWT_SECRET är samma i båda tjänsterna
-
-const LOGIN_API_URL = "http://localhost:3000";
-const NOTES_API_URL = "http://localhost:4000";
-const NOTES_WS_URL = "ws://localhost:4000";
+const LOGIN_API_URL = "https://wom-2026-login.onrender.com";
+const NOTES_API_URL = "https://wom-2026-rest-api.onrender.com";
+const NOTES_WS_URL = "wss://wom-2026-rest-api.onrender.com";
 
 async function api_request(url, options = {}) {
     const response = await fetch(url, {
@@ -46,6 +45,10 @@ async function register_user(username, password, email) {
             email: email
         })
     });
+}
+
+async function get_user(user_id) {
+    return api_request(`${LOGIN_API_URL}/login/${encodeURIComponent(user_id)}`);
 }
 
 function get_token() {

@@ -27,6 +27,7 @@ let z_index_counter = 10;
 
 let socket = null;
 let has_connected_before = false;
+const note_author_names = new Map();
 
 const unique_id = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 const find_note = (note_element) => active_board.notes.find((note) => note.id === note_element.dataset.id);
@@ -46,9 +47,44 @@ function convert_api_note(api_note, board_note_index) {
         width: api_note.width ?? note_size.width,
         height: api_note.height ?? note_size.height,
         board_id: api_note.board_id ?? api_note.board?.id,
+        author_id: api_note.author_id,
+        author_name: api_note.author?.username
+            ?? api_note.author?.name
+            ?? api_note.author_name
+            ?? note_author_names.get(String(api_note.author_id))
+            ?? "",
     };
 }
 
+// Load author names for notes
+async function load_note_author_names(api_notes) {
+    const author_ids = [...new Set(
+        api_notes
+            .map((api_note) => api_note.author_id)
+            .filter(Boolean)
+            .map(String)
+    )];
+
+    await Promise.all(author_ids.map(async (author_id) => {
+        if (note_author_names.has(author_id)) {
+            return;
+        }
+
+        try {
+            const user = await get_user(author_id);
+            const author_name = user.username ?? user.name;
+
+            if (author_name) {
+                note_author_names.set(author_id, author_name);
+            }
+        } catch (error) {
+            console.error(`Could not load author for note(s) by user ${author_id}:`, error);
+        }
+    }));
+}
+
+
+// Load boards and notes from the API
 async function load_boards_and_notes() {
     let api_boards = await get_boards();
 
@@ -57,6 +93,7 @@ async function load_boards_and_notes() {
     }
 
     const api_notes = await get_notes();
+    await load_note_author_names(api_notes);
 
     boards = api_boards.map((board) => ({
         id: String(board.id),
@@ -76,6 +113,7 @@ async function load_boards_and_notes() {
     active_board = boards.find((board) => board.id === previous_board_id) ?? boards[0] ?? null;
 }
 
+// Render the board select dropdown
 function render_board_select() {
     board_select.replaceChildren(
         ...boards.map((board) => new Option(board.name, board.id))
@@ -86,6 +124,7 @@ function render_board_select() {
     }
 }
 
+// Render the notes on the board
 function render_notes() {
     notes_board.replaceChildren();
 
@@ -98,11 +137,13 @@ function render_notes() {
     );
 }
 
+// Create a note element from a note object
 function create_note_element(note) {
     const note_element = note_template.content.firstElementChild.cloneNode(true);
 
     note_element.dataset.id = note.id;
     note_element.querySelector(".note_content").textContent = note.content;
+    note_element.querySelector(".note_author").textContent = note.author_name;
 
     place_note(note_element, note);
     paint_note(note_element, note.color);
@@ -110,6 +151,7 @@ function create_note_element(note) {
     return note_element;
 }
 
+// Place a note element on the board based on its properties
 function place_note(note_element, note) {
     note_element.style.left = `${note.x}px`;
     note_element.style.top = `${note.y}px`;
@@ -117,6 +159,7 @@ function place_note(note_element, note) {
     note_element.style.height = `${note.height}px`;
 }
 
+// Paint a note element with the specified color index
 function paint_note(note_element, color_index) {
     note_element.dataset.color = color_index;
 
@@ -125,6 +168,8 @@ function paint_note(note_element, color_index) {
     });
 }
 
+
+// Handle dragging and resizing of notes
 const drag_gesture = { keys: ["x", "y"], floors: [0, 0], class_name: "is_dragging" };
 const resize_gesture = { keys: ["width", "height"], floors: [note_size.min_width, note_size.min_height], class_name: "is_resizing" };
 
@@ -173,6 +218,8 @@ function start_gesture(event, note_element, gesture) {
     note_element.addEventListener("pointercancel", end, options);
 }
 
+
+// Save the note layout to the API
 async function save_note_layout(note, layout) {
     try {
         await api_update_note_layout(note.id, layout);
@@ -181,6 +228,8 @@ async function save_note_layout(note, layout) {
     }
 }
 
+
+// Create a new note
 async function create_note() {
     if (!active_board) {
         return;
@@ -204,6 +253,7 @@ async function create_note() {
     }
 }
 
+// Delete a note
 async function delete_note(note_element) {
     const note = find_note(note_element);
 
@@ -400,7 +450,26 @@ function handle_socket_message(message) {
         const note = convert_api_note(message.note, active_board.notes.length);
 
         active_board.notes.push(note);
-        notes_board.append(create_note_element(note));
+        const note_element = create_note_element(note);
+        notes_board.append(note_element);
+
+        if (note.author_id && !note.author_name) {
+            get_user(note.author_id)
+                .then((user) => {
+                    const author_name = user.username ?? user.name;
+
+                    if (!author_name) {
+                        return;
+                    }
+
+                    note_author_names.set(note.author_id, author_name);
+                    note.author_name = author_name;
+                    note_element.querySelector(".note_author").textContent = author_name;
+                })
+                .catch((error) => {
+                    console.error(`Could not load author for note ${note.id}:`, error);
+                });
+        }
         return;
     }
 
