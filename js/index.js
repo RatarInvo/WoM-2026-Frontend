@@ -421,7 +421,7 @@ function send_live(message) {
         pending_live_messages.forEach(send_socket_message);
         pending_live_messages.clear();
         live_timer = null;
-    }, 50);
+    }, 10);
     // send state every 50ms
 }
 
