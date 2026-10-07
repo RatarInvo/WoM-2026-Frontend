@@ -296,3 +296,17 @@ body {
         width: 180px;
     }
 }
+
+.board_error {
+    display: none;
+    flex-shrink: 0;
+    padding: 10px 24px;
+    background-color: var(--card_bg);
+    border-bottom: 1px solid var(--border_color);
+    color: var(--error_color);
+    font-size: 0.9rem;
+}
+
+.board_error.is_visible {
+    display: block;
+}

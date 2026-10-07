@@ -22,6 +22,7 @@ forgot_password_form.addEventListener("submit", async function (event) {
         const result = await request_password_reset(email_value);
         show_success(`${result.msg} (Check the inbox at http://localhost:8025)`);
     } catch (error) {
+        console.error("Password reset request failed:", error);
         show_error(error.message);
         submit_button.disabled = false;
     }

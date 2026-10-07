@@ -9,18 +9,34 @@ const NOTES_API_URL = "https://wom-2026-rest-api.onrender.com";
 const NOTES_WS_URL = "wss://wom-2026-rest-api.onrender.com";
 
 async function api_request(url, options = {}) {
-    const response = await fetch(url, {
-        ...options,
-        headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {})
-        }
-    });
+    let response;
+
+    try {
+        response = await fetch(url, {
+            ...options,
+            headers: {
+                "Content-Type": "application/json",
+                ...(options.headers || {})
+            }
+        });
+    } catch (error) {
+        console.error(`Network error for ${url}:`, error);
+        throw new Error("Can't reach the server. Please try again later.");
+    }
 
     const data = await response.json().catch(() => ({}));
 
+    if (response.status === 401 && options.headers?.Authorization) {
+        clear_session();
+        window.location.href = "login.html?expired=1";
+    }
+
     if (!response.ok) {
-        throw new Error(data.msg || data.message || "Request failed");
+        console.error(`Request to ${url} failed (${response.status}):`, data);
+
+        const error = new Error(data.msg || data.message || "Something went wrong. Please try again.");
+        error.status = response.status;
+        throw error;
     }
 
     return data;

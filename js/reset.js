@@ -66,6 +66,7 @@ reset_password_form.addEventListener("submit", async function (event) {
             window.location.href = "login.html";
         }, 2000);
     } catch (error) {
+        console.error("Password reset failed:", error);
         show_error(error.message);
         submit_button.disabled = false;
     }

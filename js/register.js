@@ -62,6 +62,7 @@ register_form.addEventListener("submit", async function (event) {
         window.location.href = "login.html";
     }, 1000);
     } catch (error) {
+        console.error("Register failed:", error);
         show_error(error.message);
     }
 });

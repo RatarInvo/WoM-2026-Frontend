@@ -15,6 +15,7 @@ const board_select = document.getElementById("board_select");
 const new_note_button = document.getElementById("new_note_button");
 const logout_button = document.getElementById("logout_button");
 const note_template = document.getElementById("note_template");
+const board_error = document.getElementById("board_error");
 
 const note_color_count = note_template.content.querySelectorAll(".note_color_swatch").length;
 
@@ -33,6 +34,21 @@ const unique_id = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(
 const find_note = (note_element) => active_board.notes.find((note) => note.id === note_element.dataset.id);
 const find_note_by_id = (id) => active_board?.notes.find((note) => note.id === String(id));
 const find_note_element = (id) => notes_board.querySelector(`.note[data-id="${Number(id)}"]`);
+
+let board_error_timer = null;
+
+function show_board_error(text, error, hide_after_ms = 6000) {
+    console.error(text, error);
+
+    board_error.textContent = error?.message ? `${text} ${error.message}` : text;
+    board_error.classList.add("is_visible");
+
+    clearTimeout(board_error_timer);
+
+    if (hide_after_ms) {
+        board_error_timer = setTimeout(() => board_error.classList.remove("is_visible"), hide_after_ms);
+    }
+}
 
 // Find a note by its ID
 function convert_api_note(api_note, board_note_index) {
@@ -224,7 +240,7 @@ async function save_note_layout(note, layout) {
     try {
         await api_update_note_layout(note.id, layout);
     } catch (error) {
-        console.error("Could not save note layout:", error);
+        show_board_error("Could not save the note.", error);
     }
 }
 
@@ -232,6 +248,7 @@ async function save_note_layout(note, layout) {
 // Create a new note
 async function create_note() {
     if (!active_board) {
+        show_board_error("Your board hasn't loaded yet. Try refreshing the page.");
         return;
     }
 
@@ -248,8 +265,7 @@ async function create_note() {
         render_board_select();
         render_notes();
     } catch (error) {
-        console.error(error);
-        window.alert(error.message);
+        show_board_error("Could not create the note.", error);
     }
 }
 
@@ -268,8 +284,7 @@ async function delete_note(note_element) {
         render_board_select();
         render_notes();
     } catch (error) {
-        console.error(error);
-        window.alert(error.message);
+        show_board_error("Could not delete the note.", error);
     }
 }
 
@@ -338,8 +353,8 @@ notes_board.addEventListener("focusout", async (event) => {
         await api_update_note(note.id, new_content);
         note.content = new_content;
     } catch (error) {
-        console.error(error);
-        window.alert(error.message);
+        event.target.textContent = note.content;
+        show_board_error("Could not save the note text.", error);
     }
 });
 
@@ -373,9 +388,13 @@ function connect_socket() {
 
     socket.addEventListener("open", async () => {
         if (has_connected_before) {
-            await load_boards_and_notes();
-            render_board_select();
-            render_notes();
+            try {
+                await load_boards_and_notes();
+                render_board_select();
+                render_notes();
+            } catch (error) {
+                show_board_error("Could not refresh the board.", error);
+            }
         }
 
         has_connected_before = true;
@@ -390,6 +409,7 @@ function connect_socket() {
         if (event.code === 4001) {
             log_out();
         } else if (event.code !== 1000) {
+            console.warn("Live updates disconnected, reconnecting in 2 seconds.");
             setTimeout(connect_socket, 2000);
         }
     });
@@ -529,8 +549,7 @@ async function initialize_page() {
         render_notes();
         connect_socket();
     } catch (error) {
-        console.error(error);
-        notes_board.textContent = "Could not load notes.";
+        show_board_error("Could not load your notes.", error, null);
     }
 }
 

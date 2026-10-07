@@ -13,6 +13,10 @@ const password_toggle = document.getElementById("password_toggle");
 const toggle_icon = document.getElementById("toggle_icon");
 const error_message = document.getElementById("error_message");
 
+if (new URLSearchParams(window.location.search).has("expired")) {
+    show_error("Your session has expired. Please sign in again.");
+}
+
 // show or hide the password text
 password_toggle.addEventListener("click", function () {
     const is_hidden = password_input.type === "password";
@@ -45,7 +49,8 @@ login_form.addEventListener("submit", async function (event) {
 
         window.location.href = "index.html";
     } catch (error) {
-        show_error("Wrong username or password. Please try again.");
+        console.error("Login failed:", error);
+        show_error(error.status === 401 ? "Wrong username or password. Please try again." : error.message);
     }
 });
 
