@@ -42,15 +42,43 @@ login_form.addEventListener("submit", async function (event) {
     hide_error();
 
     try {
-        const result = await login_user(username_value, password_value);
+        const result = await login_user(
+            username_value,
+            password_value
+        )
 
-        localStorage.setItem("auth_token", result.token);
-        localStorage.setItem("user_id", result.id);
+        const accessToken = result.accessToken || result.token
 
-        window.location.href = "index.html";
+        if (!accessToken || !result.refreshToken) {
+            throw new Error(
+                'Login response did not contain both tokens'
+            )
+        }
+
+        localStorage.setItem(
+            'auth_token',
+            accessToken
+        )
+
+        localStorage.setItem(
+            'refresh_token',
+            result.refreshToken
+        )
+
+        localStorage.setItem(
+            'user_id',
+            result.id
+        )
+
+        window.location.href = 'index.html'
     } catch (error) {
-        console.error("Login failed:", error);
-        show_error(error.status === 401 ? "Wrong username or password. Please try again." : error.message);
+        console.error('Login failed:', error)
+
+        show_error(
+            error.status === 401
+                ? 'Wrong username or password.'
+                : error.message
+        )
     }
 });
 

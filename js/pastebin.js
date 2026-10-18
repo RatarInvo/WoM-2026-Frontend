@@ -1,8 +1,9 @@
-const TOKEN_KEY = 'pastebin.token'
-const REFRESH_TOKEN_KEY = 'pastebin.refresh-token'
+const ACCESS_TOKEN_KEY = 'auth_token'
+const REFRESH_TOKEN_KEY = 'refresh_token'
 const SERVER_KEY = 'pastebin.server'
 
-const LOGIN_API_URL = 'http://localhost:4000'
+const LOGIN_API_URL = 'http://localhost:3000'
+const DEFAULT_WS_URL = 'ws://localhost:4000'
 
 const pasteInput = document.getElementById('paste')
 const logBox = document.getElementById('log')
@@ -25,15 +26,22 @@ async function refreshAccessToken() {
         return false
     }
 
-    const response = await fetch(
-        `${LOGIN_API_URL}/refresh`,
-        {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${refreshToken}`
+    let response
+
+    try {
+        response = await fetch(
+            `${LOGIN_API_URL}/refresh`,
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${refreshToken}`
+                }
             }
-        }
-    )
+        )
+    } catch (error) {
+        console.error('Refresh request failed:', error)
+        return false
+    }
 
     if (!response.ok) {
         return false
@@ -45,7 +53,10 @@ async function refreshAccessToken() {
         return false
     }
 
-    localStorage.setItem(TOKEN_KEY, data.accessToken)
+    localStorage.setItem(
+        ACCESS_TOKEN_KEY,
+        data.accessToken
+    )
 
     return true
 }
@@ -67,12 +78,16 @@ async function logout() {
                 }
             )
         } catch (error) {
-            console.error('Logout request failed:', error)
+            console.error(
+                'Logout request failed:',
+                error
+            )
         }
     }
 
-    localStorage.removeItem(TOKEN_KEY)
+    localStorage.removeItem(ACCESS_TOKEN_KEY)
     localStorage.removeItem(REFRESH_TOKEN_KEY)
+    localStorage.removeItem('user_id')
 
     if (socket) {
         socket.onclose = null
@@ -81,13 +96,15 @@ async function logout() {
     }
 
     setStatus('Not logged in', 'closed')
-
-    tokenInput.value = ''
+    window.location.href = 'login.html'
 }
 
 function defaultServerUrl() {
-    if (location.protocol === 'file:') {
-        return 'ws://localhost:4000'
+    if (
+        location.protocol === 'file:' ||
+        ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port === '5500')
+    ) {
+        return DEFAULT_WS_URL
     }
     return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`
 }
@@ -120,7 +137,7 @@ function setStatus(text, state) {
 function openSettings(message) {
     settingsMessage.textContent = message || ''
     settingsMessage.hidden = !message
-    tokenInput.value = localStorage.getItem(TOKEN_KEY) || ''
+    tokenInput.value = localStorage.getItem(ACCESS_TOKEN_KEY) || ''
     serverInput.value = localStorage.getItem(SERVER_KEY) || ''
     serverInput.placeholder = defaultServerUrl()
     if (!settingsDialog.open) {
@@ -129,7 +146,7 @@ function openSettings(message) {
 }
 
 function connect() {
-    const token = localStorage.getItem(TOKEN_KEY)
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY)
 
     if (!token) {
         setStatus('Not logged in', 'closed')
@@ -256,7 +273,7 @@ settingsForm.addEventListener('submit', (event) => {
     event.preventDefault()
     settingsDialog.close()
 
-    localStorage.setItem(TOKEN_KEY, tokenInput.value.trim())
+    localStorage.setItem(ACCESS_TOKEN_KEY, tokenInput.value.trim())
 
     if (serverInput.value.trim()) {
         localStorage.setItem(SERVER_KEY, serverInput.value.trim())
