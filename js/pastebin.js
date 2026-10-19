@@ -250,13 +250,7 @@ function send(text) {
     socket.send(JSON.stringify({ type: 'paste', text }))
 }
 
-const SEND_DELAY_MS = 200
-let sendTimer = null
-
-pasteInput.addEventListener('input', () => {
-    clearTimeout(sendTimer)
-    sendTimer = setTimeout(() => send(pasteInput.value), SEND_DELAY_MS)
-})
+pasteInput.addEventListener('input', () => send(pasteInput.value))
 
 pasteInput.addEventListener('focus', () => {
     if (pasteInput.value === lastReceived) {
