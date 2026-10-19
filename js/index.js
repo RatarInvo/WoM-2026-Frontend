@@ -405,9 +405,17 @@ function connect_socket() {
         handle_socket_message(JSON.parse(event.data));
     });
 
-    socket.addEventListener("close", (event) => {
-        if (event.code === 4001) {
-            log_out();
+    socket.addEventListener("close", async (event) => {
+        if (event.code === 4001 && event.reason === "ACCESS_TOKEN_EXPIRED") {
+            const refreshed = await refresh_access_token();
+
+            if (refreshed) {
+                connect_socket();
+            } else {
+                log_out();
+            }
+
+            return;
         } else if (event.code !== 1000) {
             console.warn("Live updates disconnected, reconnecting in 2 seconds.");
             setTimeout(connect_socket, 2000);
