@@ -16,7 +16,6 @@ const tokenInput = document.getElementById('token')
 const serverInput = document.getElementById('server')
 
 let socket = null
-let lastReceived = null
 
 async function refreshAccessToken() {
     const refreshToken = localStorage.getItem(
@@ -124,14 +123,7 @@ function tokenPayload(token) {
 }
 
 function log(text) {
-    if (logBox.lastElementChild?.textContent === text) {
-        return
-    }
-
-    const line = document.createElement('p')
-    line.textContent = text
-    logBox.append(line)
-    logBox.scrollTop = logBox.scrollHeight
+    logBox.textContent = text
 }
 
 function setStatus(text, state) {
@@ -187,9 +179,7 @@ function connect() {
         if (message.type === 'ack') {
             log(`Pasted value sent to ${message.clients} clients`)
         } else if (message.type === 'paste') {
-            pasteInput.value = message.text
-            lastReceived = message.text
-            log('Received pasted value')
+            log(message.text)
         }
     }
 
@@ -251,12 +241,6 @@ function send(text) {
 }
 
 pasteInput.addEventListener('input', () => send(pasteInput.value))
-
-pasteInput.addEventListener('focus', () => {
-    if (pasteInput.value === lastReceived) {
-        pasteInput.select()
-    }
-})
 
 reconnectButton.addEventListener('click', connect)
 
