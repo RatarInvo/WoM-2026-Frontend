@@ -2,8 +2,8 @@ const ACCESS_TOKEN_KEY = 'auth_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
 const SERVER_KEY = 'pastebin.server'
 
-const LOGIN_API_URL = 'http://localhost:3000'
-const DEFAULT_WS_URL = 'ws://localhost:4000'
+const LOGIN_API_URL = 'https://wom-2026-login.onrender.com'
+const DEFAULT_WS_URL = 'wss://wom-2026-websocket-server.onrender.com'
 
 const pasteInput = document.getElementById('paste')
 const logBox = document.getElementById('log')
@@ -16,6 +16,7 @@ const tokenInput = document.getElementById('token')
 const serverInput = document.getElementById('server')
 
 let socket = null
+let lastReceived = null
 
 async function refreshAccessToken() {
     const refreshToken = localStorage.getItem(
@@ -123,6 +124,10 @@ function tokenPayload(token) {
 }
 
 function log(text) {
+    if (logBox.lastElementChild?.textContent === text) {
+        return
+    }
+
     const line = document.createElement('p')
     line.textContent = text
     logBox.append(line)
@@ -183,6 +188,7 @@ function connect() {
             log(`Pasted value sent to ${message.clients} clients`)
         } else if (message.type === 'paste') {
             pasteInput.value = message.text
+            lastReceived = message.text
             log('Received pasted value')
         }
     }
@@ -236,10 +242,6 @@ socket.onclose = async (event) => {
 }
 
 function send(text) {
-    if (!text) {
-        return
-    }
-
     if (!socket || socket.readyState !== WebSocket.OPEN) {
         log('Not connected, value was not sent')
         return
@@ -248,16 +250,19 @@ function send(text) {
     socket.send(JSON.stringify({ type: 'paste', text }))
 }
 
-pasteInput.addEventListener('paste', () => setTimeout(() => send(pasteInput.value)))
+const SEND_DELAY_MS = 200
+let sendTimer = null
 
-pasteInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault()
-        send(pasteInput.value)
-    }
+pasteInput.addEventListener('input', () => {
+    clearTimeout(sendTimer)
+    sendTimer = setTimeout(() => send(pasteInput.value), SEND_DELAY_MS)
 })
 
-pasteInput.addEventListener('focus', () => pasteInput.select())
+pasteInput.addEventListener('focus', () => {
+    if (pasteInput.value === lastReceived) {
+        pasteInput.select()
+    }
+})
 
 reconnectButton.addEventListener('click', connect)
 
