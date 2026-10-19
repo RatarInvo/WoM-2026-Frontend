@@ -101,12 +101,13 @@ async function logout() {
 
 function defaultServerUrl() {
     if (
-        location.protocol === 'file:' ||
-        ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && location.port === '5500')
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1'
     ) {
-        return DEFAULT_WS_URL
+        return 'ws://localhost:4000'
     }
-    return `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}`
+
+    return DEFAULT_WS_URL
 }
 
 function serverUrl() {
